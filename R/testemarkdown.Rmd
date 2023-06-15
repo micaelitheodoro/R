@@ -1,0 +1,539 @@
+---
+title: "GGPLOT2"
+author: "Micaeli Theodoro"
+date: "2023-06-15"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+# Cabeçalho 1
+
+Este arquivo tem como objetivo principal mostrar o uso do ggplot2 para criação de gráficos e boas práticas.
+
+## GGPLOT2
+
+Vamos carregar a biblioteca ggplot2 e outros pacotes
+
+```{r}
+library(ggplot2)
+library(tidyr)
+library(dplyr)
+```
+
+## Lendo o conjunto de dados
+
+```{r}
+dados <- read.csv("Dados/Pokemon_full.csv")
+head(dados)
+```
+
+## Básico
+
+O ggplot2 funciona com construção de "camadas" (layers). O comando `{r} ggplot()` inicia um gráfico vazio.
+
+```{r}
+ggplot()
+
+```
+
+A partir deste gráfico vazio, podemos adicionar camadas de pontos, linhas, barras, caixas, entre outros. Dê uma olhada no [manual de referência](https://cran.r-project.org/web/packages/ggplot2/ggplot2.pdf). Outros como [tidyverse](https://ggplot2.tidyverse.org/), ou [Curso de R](https://livro.curso-r.com/8-1-o-pacote-ggplot2.html) podem ajudar bastante! Explore o máximo.
+
+
+### Adicionando layers
+
+De maneira geral, a sintaxe que vamos usar é `{r} geom_yyy(data = dados, aes(x = x, y = y))`, sendo "line" para linhas, "point" para pontos e assim por diante.
+
+Por exemplo, para criar um plot de peso x altura temos
+
+```{r}
+ggplot()+
+  geom_point(data = dados, aes(x = height, y = weight))
+```
+
+Se quisermos que os pontos tenham uma cor em particular, usamos
+
+```{r}
+ggplot()+
+  geom_point(data = dados, aes(x = height, y = weight), color = "blue")
+```
+
+Se quisermos que a cor seja dependente de uma variável, por exemplo o tipo, precisamos colocar ela dentro do "aesthesic".
+
+```{r}
+ggplot()+
+  geom_point(data = dados, aes(x = height, y = weight, color = type))
+```
+
+Note que o ggplot2 funciona em um esquema de "linha por linha". Ou seja, os dados devem estar em formato "long table".
+
+## Cores, Formas e Eixos
+
+É possível alterar as cores dos gráficos, por exemplo usando escalas pré-programadas
+
+```{r}
+ggplot()+
+  geom_point(data = dados, aes(x = height, y = weight, color = type))+
+  scale_color_viridis_d() #d -> quer dizer "discrete"
+
+
+ggplot()+
+  geom_point(data = dados, aes(x = height, y = weight, color = type))+
+  scale_color_brewer(palette = "Set3") #d -> quer dizer "discrete"
+
+```
+
+Ou até mesmo passando as cores que querem usar. Vamos criar a coluna tamnho, como antes, mudando um pouco os breaks
+```{r}
+dados <- dados %>% 
+  dplyr::mutate(
+    tamanho = dplyr::case_when(
+            height < 5 ~ "baixinho",
+            height < 50 ~ "pequeno",
+            height < 100 ~ "médio",
+            TRUE ~ "altão"
+        )
+  )
+```
+
+
+Criar o plot com cores em função de "tamanho"
+
+```{r}
+
+dados <- dados %>% 
+  dplyr::mutate(
+    tamanho = dplyr::case_when(
+            height < 5 ~ "baixinho",
+            height < 50 ~ "pequeno",
+            height < 100 ~ "médio",
+            TRUE ~ "altão"
+        )
+  )
+
+ggplot()+
+  geom_point(data = dados, aes(x = height, y = weight, color = tamanho))+
+  scale_color_manual(values = c("blue", "red", "grey", "purple"))
+
+# notem que os breaks estão estranhos
+ggplot()+
+  geom_point(data = dados, aes(x = height, y = weight, color = tamanho))+
+  scale_color_manual(values = c("blue", "red", "grey", "purple"), breaks = c("baixinho", "pequeno", "médio", "altão"), name = "Classe de tamanho")
+
+
+# notem que os breaks estão estranhos
+ggplot()+
+  geom_point(data = dados, aes(x = height, y = weight, color = tamanho))+
+  scale_color_manual(values = c("blue", "red", "grey", "purple"), breaks = c("baixinho", "pequeno", "médio", "altão"),
+                     label = c("Baixinho", "Pequeno", "Médio", "iuyhagsdiuhasiudh"), name = "Classe de tamanho -- o que eu quiser")
+
+```
+
+
+
+Agora vamos adicionar uma forma diferente
+
+
+```{r}
+
+ggplot()+
+  geom_point(data = dados, aes(x = height, y = weight, color = tamanho), shape = 21)+
+  scale_color_manual(values = c("blue", "red", "grey", "purple"))
+
+# estranho
+ggplot()+
+  geom_point(data = dados, aes(x = height, y = weight, color = tamanho, fill = tamanho), shape = 22)+
+  scale_color_manual(values = c("blue", "red", "grey", "purple"), breaks = c("baixinho", "pequeno", "médio", "altão"), name = "Classe de tamanho")
+
+
+ggplot()+
+  geom_point(data = dados, aes(x = height, y = weight, color = tamanho, fill = tamanho), shape = 21)+
+  scale_color_manual(values = c("blue", "red", "grey", "purple"), breaks = c("baixinho", "pequeno", "médio", "altão"), name = "Classe de tamanho")+
+  scale_fill_manual(values = c("blue", "red", "grey", "purple"), breaks = c("baixinho", "pequeno", "médio", "altão"), name = "Classe de tamanho")
+
+
+#estranho
+ggplot()+
+  geom_point(data = dados, aes(x = height, y = weight, color = tamanho, fill = tamanho, shape = tamanho))+
+  scale_color_manual(values = c("blue", "red", "grey", "purple"), breaks = c("baixinho", "pequeno", "médio", "altão"), name = "Classe de tamanho")+
+  scale_fill_manual(values = c("blue", "red", "grey", "purple"), breaks = c("baixinho", "pequeno", "médio", "altão"), name = "Classe de tamanho")
+
+
+ggplot()+
+  geom_point(data = dados, aes(x = height, y = weight, color = tamanho, fill = tamanho, shape = tamanho))+
+  scale_color_manual(values = c("blue", "red", "grey", "purple"), breaks = c("baixinho", "pequeno", "médio", "altão"), name = "Classe de tamanho")+
+  scale_fill_manual(values = c("blue", "red", "grey", "purple"), breaks = c("baixinho", "pequeno", "médio", "altão"), name = "Classe de tamanho")+
+  scale_shape_manual(values = c(21,22,23,24), breaks = c("baixinho", "pequeno", "médio", "altão"), name = "Classe de tamanho")
+
+```
+
+Podemos tambem alterar os eixos gráficos
+
+```{r}
+ggplot()+
+  geom_point(data = dados, aes(x = height, y = weight, color = tamanho, fill = tamanho, shape = tamanho))+
+  scale_color_manual(values = c("blue", "red", "grey", "purple"), breaks = c("baixinho", "pequeno", "médio", "altão"), name = "Classe de tamanho")+
+  scale_fill_manual(values = c("blue", "red", "grey", "purple"), breaks = c("baixinho", "pequeno", "médio", "altão"), name = "Classe de tamanho")+
+  scale_shape_manual(values = c(21,22,23,24), breaks = c("baixinho", "pequeno", "médio", "altão"), name = "Classe de tamanho")+
+  scale_y_continuous(limits = c(0, 12000), expand = c(0,0), name = "Peso")+
+  scale_x_continuous(limits = c(-1, 251), expand = c(0,0), name = "Altura")
+#expand = c(0,0) "cola" o inicio dos eixos nos limites
+```
+
+## Temas
+
+o ggplot2 tem uma biblioteca de temas. Alguns deles são default, dêem uma olhada [aqui](https://wilsonfreitas.github.io/posts/temas-do-ggplot.html).
+
+
+
+```{r}
+ggplot()+
+  geom_point(data = dados, aes(x = height, y = weight, color = tamanho, fill = tamanho, shape = tamanho))+
+  scale_color_manual(values = c("blue", "red", "grey", "purple"), breaks = c("baixinho", "pequeno", "médio", "altão"), name = "Classe de tamanho")+
+  scale_fill_manual(values = c("blue", "red", "grey", "purple"), breaks = c("baixinho", "pequeno", "médio", "altão"), name = "Classe de tamanho")+
+  scale_shape_manual(values = c(21,22,23,24), breaks = c("baixinho", "pequeno", "médio", "altão"), name = "Classe de tamanho")+
+  scale_y_continuous(limits = c(0, 12000), expand = c(0,0), name = "Peso")+
+  scale_x_continuous(limits = c(0, 250), expand = c(0,0), name = "Altura")+
+  theme_bw()
+```
+
+Também existe uma biblioteca extra para isso. Chequem esse [link](https://statisticsglobe.com/ggthemes-package-r)
+
+```{r}
+library(ggthemes)
+
+ggplot()+
+  geom_point(data = dados, aes(x = height, y = weight, color = tamanho, fill = tamanho, shape = tamanho))+
+  scale_color_manual(values = c("blue", "red", "grey", "purple"), breaks = c("baixinho", "pequeno", "médio", "altão"), name = "Classe de tamanho")+
+  scale_fill_manual(values = c("blue", "red", "grey", "purple"), breaks = c("baixinho", "pequeno", "médio", "altão"), name = "Classe de tamanho")+
+  scale_shape_manual(values = c(21,22,23,24), breaks = c("baixinho", "pequeno", "médio", "altão"), name = "Classe de tamanho")+
+  scale_y_continuous(limits = c(0, 12000), expand = c(0,0), name = "Peso")+
+  scale_x_continuous(limits = c(0, 250), expand = c(0,0), name = "Altura")+
+  theme_clean()
+```
+
+
+```{r}
+library(rcartocolor)
+cores <- carto_pal(3, name = "Bold")
+ggplot()+
+  geom_density(data = dados, aes(x = height), color = cores[1])+
+  geom_density(data = dados, aes(x = weight), color = cores[2])+
+  scale_x_continuous(trans = "log10")+
+  labs(x = "Medida", y = "Densidade", color = "Tipo de medida")+
+  theme_bw()
+
+ggplot()+
+  geom_density(data = dados, aes(x = height, color = "Altura", fill = "Altura", linetype = "Altura"), alpha = 0.6)+
+  geom_density(data = dados, aes(x = weight, color = "Peso", fill = "Peso", linetype = "Peso"), alpha = 0.6)+
+  scale_x_continuous(trans = "log10")+
+  scale_color_manual(values = cores[1:2])+
+  scale_fill_manual(values = cores[1:2])+
+  labs(x = "Medida", y = "Densidade", color = "Tipo de medida", linetype = "Tipo de medida", fill = "Tipo de medida")+
+  theme_bw()
+
+dados %>% head()
+
+```
+
+```{r}
+dados %>%
+  select(Peso = weight, Altura = height) %>% 
+  tidyr::pivot_longer(cols = c(1,2), values_to = "Medida", names_to = "Tipo de medida") %>% 
+  ggplot()+
+  geom_density(aes(x = Medida, color = `Tipo de medida`, fill = `Tipo de medida`, linetype = `Tipo de medida`), alpha = 0.6)+
+  scale_x_continuous(trans = "log10")+
+  scale_color_manual(values = cores[1:2])+
+  scale_fill_manual(values = cores[1:2])+
+  labs(x = "Medida", y = "Densidade", color = "Tipo de medida", linetype = "Tipo de medida", fill = "Tipo de medida")+
+  theme_bw()
+  
+```
+
+
+## Adicionando temas sobre temas
+
+
+É possível adicionar uma camada de tema customizada que vai "sobrepor" o padrão
+
+
+```{r, fig.width=5}
+
+library(ggthemes)
+
+ggplot()+
+  geom_point(data = dados, aes(x = height, y = weight, color = tamanho, fill = tamanho, shape = tamanho), alpha = 0.6)+
+  scale_color_manual(values = c("blue", "red", "grey", "purple"), breaks = c("baixinho", "pequeno", "médio", "altão"), name = "Classe de tamanho")+
+  scale_fill_manual(values = c("blue", "red", "grey", "purple"), breaks = c("baixinho", "pequeno", "médio", "altão"), name = "Classe de tamanho")+
+  scale_shape_manual(values = c(21,22,23,24), breaks = c("baixinho", "pequeno", "médio", "altão"), name = "Classe de tamanho")+
+  scale_y_continuous(trans = "log10", limits = c(1, 12000), expand = c(0,0), name = "Peso")+
+  scale_x_continuous(trans = "log10", limits = c(1, 250), expand = c(0,0), name = "Altura")+
+  labs(title = "Título aleatório")+
+  theme_clean()+
+  theme(
+    axis.text = element_text(size = 18),
+    axis.title = element_text(size = 20, face = "bold"),
+    plot.title = element_text(size = 25, face = "bold"),
+    legend.position = "bottom",
+    legend.text = element_text(size = 14),
+    legend.title = element_text(size = 16)
+  )
+
+```
+
+
+## Gráficos de barras
+
+
+```{r}
+
+dados %>%
+  group_by(type) %>% 
+  summarise(
+    media_altura = mean(height),
+    media_peso = mean(weight)
+  ) %>% 
+  ggplot()+
+    geom_col(aes(x = type, y = media_altura))
+
+
+#grafico da média da altura e do peso
+
+dados %>%
+  group_by(type) %>% 
+  summarise(
+    media_altura = mean(height),
+    media_peso = mean(weight)
+  ) %>%
+  tidyr::pivot_longer(cols = c("media_altura", "media_peso"), names_to = "tipo", values_to = "media") %>% 
+  ggplot()+
+    geom_col(aes(x = type, y = media, color = tipo))
+
+# arrumar o gráfico
+
+```
+
+
+
+## Segundo eixo
+
+
+É possível adicionar um segundo eixo. Precisamos achar um fator de escala
+
+
+```{r}
+## LIÇAO DIA 01/06
+
+df <- dados %>%
+  group_by(type) %>% 
+  summarise(
+    media_altura = mean(height),
+    media_peso = mean(weight)
+  ) 
+
+fator <- max(df$media_peso)/max(df$media_altura)
+fator
+
+df$media_altura <- df$media_altura*fator
+
+df %>% 
+  tidyr::pivot_longer(cols = c("media_altura", "media_peso"), names_to = "tipo", values_to = "media") %>% 
+  ggplot()+
+    geom_col(aes(x = type, y = media, color = tipo, fill = tipo), position = position_dodge2())+
+  scale_y_continuous(
+    
+    # Features of the first axis
+    name = "Média do peso",
+    
+    # Add a second axis and specify its features
+    sec.axis = sec_axis(~./fator, name="Média do altura"),
+    expand = c(0,0)
+  )+
+  scale_color_brewer(palette = "Set1")+
+  scale_fill_brewer(palette = "Set1")+
+  theme_bw()+
+  theme(
+    axis.title = element_text(size = 18, face = "bold"),
+    axis.text = element_text(size = 14)
+  )
+
+# TODO arrumar
+
+```
+
+## Mais plots
+
+
+```{r}
+df <- dados %>%
+  group_by(type) %>% 
+  summarise(
+    media_altura = mean(height),
+    media_peso = mean(weight),
+    sd_h = sd(height),
+    sd_w = sd(weight)
+  ) 
+
+fator <- max(df$media_peso)/max(df$media_altura)
+fator
+
+
+df$sd_h <- df$sd_h*fator
+df$media_altura <- df$media_altura*fator
+
+
+df_media <- df %>% 
+  select(type, media_altura, media_peso) %>% 
+  tidyr::pivot_longer(cols = c("media_altura", "media_peso"), names_to = "tipo", values_to = "media") %>%
+  mutate(
+    tipo = ifelse(tipo == "media_altura", "Altura", "Peso")
+  )
+
+
+df_sd <- df %>% 
+  select(type, sd_h, sd_w) %>% 
+  tidyr::pivot_longer(cols = c("sd_h", "sd_w"), names_to = "tipo", values_to = "sd") %>%
+  mutate(
+    tipo = ifelse(tipo == "sd_h", "Altura", "Peso")
+  )
+
+df <- inner_join(df_media, df_sd, by = c("type", "tipo"))
+df
+
+  ggplot(df)+
+    geom_point(aes(x = type, y = media, color = tipo, fill = tipo), position = position_dodge(1.0), size = 4)+
+    geom_errorbar(aes(x = type, y = media, ymin = media-sd, ymax = media+sd, color = tipo, fill = tipo), position = position_dodge(1.0))+
+  scale_y_continuous(
+    
+    # Features of the first axis
+    name = "Média do peso",
+    
+    # Add a second axis and specify its features
+    sec.axis = sec_axis(~./fator, name="Média do altura"),
+    expand = c(0,0)
+  )+
+  scale_color_brewer(palette = "Set1")+
+  scale_fill_brewer(palette = "Set1")+
+  theme_bw()+
+  theme(
+    axis.title = element_text(size = 18, face = "bold"),
+    axis.text.y = element_text(size = 14),
+    axis.text.x = element_text(size = 14, angle = 45, hjust = 1.0)
+  )
+
+```
+
+
+
+
+
+```{r}
+df <- dados %>%
+  group_by(type) %>% 
+  summarise(
+    media_altura = mean(height),
+    media_peso = mean(weight),
+    sd_h = sd(height),
+    sd_w = sd(weight)
+  ) 
+
+fator <- max(df$media_peso)/max(df$media_altura)
+fator
+
+
+df$sd_h <- df$sd_h*fator
+df$media_altura <- df$media_altura*fator
+
+
+df_media <- df %>% 
+  select(type, media_altura, media_peso) %>% 
+  tidyr::pivot_longer(cols = c("media_altura", "media_peso"), names_to = "tipo", values_to = "media") %>%
+  mutate(
+    tipo = ifelse(tipo == "media_altura", "Altura", "Peso")
+  )
+
+
+df_sd <- df %>% 
+  select(type, sd_h, sd_w) %>% 
+  tidyr::pivot_longer(cols = c("sd_h", "sd_w"), names_to = "tipo", values_to = "sd") %>%
+  mutate(
+    tipo = ifelse(tipo == "sd_h", "Altura", "Peso")
+  )
+
+df <- inner_join(df_media, df_sd, by = c("type", "tipo"))
+
+
+dados2 <- dados %>% 
+  select(type, Altura = height, Peso = weight)%>% 
+  mutate(
+    Altura = Altura*fator
+  ) %>% 
+  tidyr::pivot_longer(cols = c("Altura", "Peso"), names_to = "tipo", values_to = "valor") 
+
+cores <- rcartocolor::carto_pal(12, "Bold")
+
+  ggplot()+
+    geom_jitter(data = dados2, aes(x = type, y = valor, color = tipo, group = tipo), position = position_dodge(1.0), alpha = 0.7)+
+    geom_point(data = df, aes(x = type, y = media, group = tipo), position = position_dodge(1.0), size = 2)+
+    geom_errorbar(data = df, aes(x = type, y = media, ymin = media-sd, ymax = media+sd, group = tipo), position = position_dodge(1.0), width = 0.3)+
+  scale_y_continuous(
+    # Features of the first axis
+    name = "Média do peso",
+    
+    # Add a second axis and specify its features
+    sec.axis = sec_axis(~./fator, name="Média do altura"),
+    expand = c(0,0)
+  )+
+  scale_color_manual(values = cores[1:2], name = "Medida")+
+  scale_fill_manual(values = cores[1:2], name = "Medida")+
+  theme_bw()+
+  theme(
+    axis.title = element_text(size = 18, face = "bold"),
+    axis.text.y = element_text(size = 14),
+    axis.text.x = element_text(size = 14, angle = 45, hjust = 1.0)
+  )
+
+```
+Tarefa para o dia 15/06/2023
+```{r}
+#Tarefa para o dia 15/06/2023
+
+df <- dados %>%
+  group_by(type) %>%
+  summarise(
+    media_altura = mean(height),
+    media_peso = mean(weight)
+  )
+
+fator <- max(df$media_peso) / max(df$media_altura)
+df$media_altura <- df$media_altura * fator
+
+df_long <- df %>%
+  pivot_longer(cols = c(media_altura, media_peso), names_to = "tipo", values_to = "media")
+
+ggplot(df_long, aes(x = type, y = media, color = tipo, fill = tipo)) +
+  geom_col(position = position_dodge2()) +
+  scale_y_continuous(
+    name = "Média do peso",
+    sec.axis = sec_axis(~ ./fator, name = "Média da altura"),
+    expand = c(0, 0)
+  ) +
+  scale_x_discrete(name = "Tipo de Pokemon") +
+  scale_color_manual(values = c("#6E0DAA", "#AE57A4")) +  
+  scale_fill_manual(values = c("#6E0DAA", "#AE57A4")) +   
+  theme_bw() +
+  theme(
+    axis.title = element_text(size = 12, face = "bold"),
+    axis.text = element_text(size = 10),
+    legend.position = "bottom",
+    axis.text.x = element_text(angle = 75, vjust = 0.5)
+  )
+
+```
+
+## Plots legais
+
+[Clique aqui](https://www.cedricscherer.com/2021/06/06/visualizing-distributions-with-raincloud-plots-and-how-to-create-them-with-ggplot2/)
