@@ -345,8 +345,20 @@ indice_correlação<-cor(cbind(orçamento,receita,receita_eua),use="pairwise.com
 
 print(indice_correlação)
 
-#TODO checar se cada filme tem apenas um genero associado
+#Outra forma de fazer a tarefa de correlação
+dados%>%
+  select_if(is.numeric)%>%
+  filter(complete.cases(.))%>%
+  cor()
 
+dados <- readr::read_rds("Dados/imdb.rds")
+View(dados)
+head(dados)
+names(dados)
+
+df <- dados %>% 
+  select(titulo, orcamento, receita, receita_eua)
+df
 #? Pivoteamento
 
 #? pivot_wider
